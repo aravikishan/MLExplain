@@ -1,0 +1,59 @@
+{
+    "description": "MLExplain seed data -- sample experiment configurations",
+    "version": "1.0.0",
+    "sample_experiments": [
+        {
+            "name": "Iris Decision Tree Baseline",
+            "dataset": "iris",
+            "algorithm": "decision_tree",
+            "hyperparameters": {"max_depth": 3, "min_samples_split": 2},
+            "test_ratio": 0.2,
+            "random_state": 42
+        },
+        {
+            "name": "Iris Random Forest",
+            "dataset": "iris",
+            "algorithm": "random_forest",
+            "hyperparameters": {"n_estimators": 100, "max_depth": 5},
+            "test_ratio": 0.2,
+            "random_state": 42
+        },
+        {
+            "name": "Wine SVM (RBF)",
+            "dataset": "wine",
+            "algorithm": "svm",
+            "hyperparameters": {"C": 1.0, "kernel": "rbf"},
+            "test_ratio": 0.25,
+            "random_state": 42
+        },
+        {
+            "name": "Breast Cancer KNN",
+            "dataset": "breast_cancer",
+            "algorithm": "knn",
+            "hyperparameters": {"n_neighbors": 7, "metric": "euclidean"},
+            "test_ratio": 0.2,
+            "random_state": 42
+        },
+        {
+            "name": "Digits Logistic Regression",
+            "dataset": "digits",
+            "algorithm": "logistic_regression",
+            "hyperparameters": {"C": 0.5, "solver": "lbfgs", "max_iter": 2000},
+            "test_ratio": 0.2,
+            "random_state": 42
+        }
+    ],
+    "algorithm_descriptions": {
+        "decision_tree": "Interpretable tree-based classifier using Gini impurity",
+        "random_forest": "Ensemble of decision trees with bootstrap aggregation",
+        "svm": "Support Vector Machine with kernel trick for non-linear boundaries",
+        "knn": "Instance-based classifier using nearest neighbour voting",
+        "logistic_regression": "Linear model for classification via log-odds"
+    },
+    "dataset_notes": {
+        "iris": "Best for introductory ML demos; small, clean, well-separated classes",
+        "wine": "Good for demonstrating feature importance with 13 chemical features",
+        "breast_cancer": "Binary classification with 30 features; tests high-dimensional models",
+        "digits": "Multi-class (10 classes) with 64 features; tests model scalability"
+    }
+}
