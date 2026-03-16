@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}MLExplain - Dashboard{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>MLExplain Dashboard</h1>
+    <p class="subtitle">Train, evaluate, and understand machine learning models</p>
+</section>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_experiments }}</div>
+        <div class="stat-label">Experiments</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ datasets|length }}</div>
+        <div class="stat-label">Datasets</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ "%.1f"|format(avg_accuracy * 100) }}%</div>
+        <div class="stat-label">Avg Accuracy</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">5</div>
+        <div class="stat-label">Algorithms</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="section">
+    <h2>Quick Actions</h2>
+    <div class="action-grid">
+        <a href="/train" class="action-card">
+            <div class="action-icon">&#x1F3AF;</div>
+            <h3>Train Model</h3>
+            <p>Select a dataset, choose an algorithm, and train a model</p>
+        </a>
+        <a href="/compare" class="action-card">
+            <div class="action-icon">&#x1F4CA;</div>
+            <h3>Compare Models</h3>
+            <p>Run multiple algorithms side by side and compare metrics</p>
+        </a>
+    </div>
+</div>
+
+<!-- Available Datasets -->
+<div class="section">
+    <h2>Available Datasets</h2>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Samples</th>
+                    <th>Features</th>
+                    <th>Classes</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ds in datasets %}
+                <tr>
+                    <td><strong>{{ ds.name }}</strong></td>
+                    <td>{{ ds.num_samples }}</td>
+                    <td>{{ ds.num_features }}</td>
+                    <td>{{ ds.num_classes }}</td>
+                    <td class="description-cell">{{ ds.description[:80] }}{% if ds.description|length > 80 %}...{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Experiments -->
+<div class="section">
+    <h2>Recent Experiments</h2>
+    {% if experiments %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Algorithm</th>
+                    <th>Dataset</th>
+                    <th>Accuracy</th>
+                    <th>F1 Score</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in experiments %}
+                <tr>
+                    <td>{{ exp.id }}</td>
+                    <td>{{ exp.name }}</td>
+                    <td><span class="badge badge-algo">{{ exp.algorithm }}</span></td>
+                    <td>{{ exp.dataset.name if exp.dataset else 'N/A' }}</td>
+                    <td>
+                        {% if exp.result %}
+                        <span class="metric-value">{{ "%.2f"|format(exp.result.accuracy * 100) }}%</span>
+                        {% else %}
+                        <span class="text-muted">--</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if exp.result %}
+                        <span class="metric-value">{{ "%.4f"|format(exp.result.f1_score) }}</span>
+                        {% else %}
+                        <span class="text-muted">--</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/explain/{{ exp.id }}" class="btn btn-sm btn-primary">Explain</a>
+                        <button class="btn btn-sm btn-danger" onclick="deleteExperiment({{ exp.id }})">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No experiments yet. <a href="/train">Train your first model</a> to get started.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}MLExplain - Explain Model #{{ experiment.id }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Model Explanation</h1>
+    <p class="subtitle">{{ experiment.name }} &mdash; {{ experiment.algorithm }} on {{ experiment.dataset.name }}</p>
+</section>
+
+<!-- Metrics Summary -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-label">Accuracy</div>
+        <div class="metric-value">{{ "%.2f"|format(experiment.result.accuracy * 100) }}%</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Precision</div>
+        <div class="metric-value">{{ "%.4f"|format(experiment.result.precision) }}</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Recall</div>
+        <div class="metric-value">{{ "%.4f"|format(experiment.result.recall) }}</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">F1 Score</div>
+        <div class="metric-value">{{ "%.4f"|format(experiment.result.f1_score) }}</div>
+    </div>
+</div>
+
+<!-- Experiment Info -->
+<div class="section card">
+    <h2>Experiment Details</h2>
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label">Algorithm:</span>
+            <span class="info-value">{{ experiment.algorithm }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Dataset:</span>
+            <span class="info-value">{{ experiment.dataset.name }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Test Ratio:</span>
+            <span class="info-value">{{ experiment.test_ratio }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Random State:</span>
+            <span class="info-value">{{ experiment.random_state }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Training Samples:</span>
+            <span class="info-value">{{ experiment.result.train_samples }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Test Samples:</span>
+            <span class="info-value">{{ experiment.result.test_samples }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Training Time:</span>
+            <span class="info-value">{{ "%.2f"|format(experiment.result.training_time_ms) }} ms</span>
+        </div>
+    </div>
+</div>
+
+<!-- Feature Importance -->
+<div class="section card">
+    <h2>Feature Importance</h2>
+    {% if importance %}
+    <canvas id="importanceChart" width="600" height="300"></canvas>
+    {% else %}
+    <p class="text-muted">Feature importance not available for this model.</p>
+    {% endif %}
+</div>
+
+<!-- Confusion Matrix -->
+<div class="section card">
+    <h2>Confusion Matrix</h2>
+    {% if confusion_matrix %}
+    <canvas id="confusionChart" width="500" height="400"></canvas>
+    <div class="cm-table-container">
+        <table class="data-table cm-table">
+            <thead>
+                <tr>
+                    <th>Predicted &rarr;</th>
+                    {% for name in target_names %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row_idx in range(confusion_matrix|length) %}
+                <tr>
+                    <td><strong>{{ target_names[row_idx] if row_idx < target_names|length else row_idx }}</strong></td>
+                    {% for val in confusion_matrix[row_idx] %}
+                    <td class="cm-cell {% if loop.index0 == row_idx %}cm-diagonal{% endif %}">{{ val }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">Confusion matrix not available.</p>
+    {% endif %}
+</div>
+
+<!-- Classification Report -->
+<div class="section card">
+    <h2>Classification Report</h2>
+    {% if classification_report %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Class</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1 Score</th>
+                    <th>Support</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, values in classification_report.items() %}
+                {% if values is mapping and 'precision' in values %}
+                <tr>
+                    <td><strong>{{ key }}</strong></td>
+                    <td>{{ "%.4f"|format(values.precision) }}</td>
+                    <td>{{ "%.4f"|format(values.recall) }}</td>
+                    <td>{{ "%.4f"|format(values['f1-score']) if 'f1-score' in values else "%.4f"|format(values.get('f1_score', 0)) }}</td>
+                    <td>{{ values.support }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">Classification report not available.</p>
+    {% endif %}
+</div>
+
+<!-- Prediction -->
+<div class="section card">
+    <h2>Make a Prediction</h2>
+    <form id="predictForm">
+        <div class="predict-features">
+            {% for fname in feature_names %}
+            <div class="form-group inline">
+                <label>{{ fname }}</label>
+                <input type="number" step="any" class="form-control feature-input"
+                       data-feature="{{ fname }}" placeholder="0.0" />
+            </div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary">Predict</button>
+    </form>
+    <div id="predictionResult" class="prediction-result" style="display: none;"></div>
+</div>
+
+<div class="section">
+    <a href="/" class="btn btn-secondary">&larr; Back to Dashboard</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Render feature importance chart
+    {% if importance %}
+    var impData = {{ importance | tojson }};
+    renderFeatureImportanceChart('importanceChart', impData);
+    {% endif %}
+
+    // Render confusion matrix chart
+    {% if confusion_matrix %}
+    var cmData = {{ confusion_matrix | tojson }};
+    var targetNames = {{ target_names | tojson }};
+    renderConfusionMatrixChart('confusionChart', cmData, targetNames);
+    {% endif %}
+
+    // Prediction form
+    var predictForm = document.getElementById('predictForm');
+    if (predictForm) {
+        predictForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var inputs = document.querySelectorAll('.feature-input');
+            var features = [];
+            inputs.forEach(function(input) {
+                features.push(parseFloat(input.value) || 0);
+            });
+
+            fetch('/api/predict/{{ experiment.id }}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({features: features})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var resultDiv = document.getElementById('predictionResult');
+                resultDiv.style.display = 'block';
+                if (data.error) {
+                    resultDiv.innerHTML = '<p class="error">' + data.error + '</p>';
+                } else {
+                    var html = '<h3>Prediction: ' + data.predicted_label + '</h3>';
+                    if (data.probabilities) {
+                        html += '<div class="prob-bars">';
+                        for (var label in data.probabilities) {
+                            var pct = (data.probabilities[label] * 100).toFixed(1);
+                            html += '<div class="prob-row">' +
+                                '<span class="prob-label">' + label + '</span>' +
+                                '<div class="prob-bar-bg"><div class="prob-bar" style="width:' + pct + '%"></div></div>' +
+                                '<span class="prob-value">' + pct + '%</span>' +
+                                '</div>';
+                        }
+                        html += '</div>';
+                    }
+                    resultDiv.innerHTML = html;
+                }
+            })
+            .catch(function(err) {
+                document.getElementById('predictionResult').innerHTML =
+                    '<p class="error">Request failed: ' + err + '</p>';
+                document.getElementById('predictionResult').style.display = 'block';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

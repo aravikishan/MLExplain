@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}MLExplain - Train Model{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Train a Model</h1>
+    <p class="subtitle">Select a dataset and algorithm, configure hyperparameters, and train</p>
+</section>
+
+<div class="train-layout">
+    <!-- Configuration Panel -->
+    <div class="config-panel card">
+        <h2>Configuration</h2>
+        <form id="trainForm">
+            <div class="form-group">
+                <label for="experimentName">Experiment Name</label>
+                <input type="text" id="experimentName" class="form-control"
+                       placeholder="My Experiment" />
+            </div>
+
+            <div class="form-group">
+                <label for="datasetSelect">Dataset</label>
+                <select id="datasetSelect" class="form-control">
+                    {% for ds in datasets %}
+                    <option value="{{ ds.name }}">
+                        {{ ds.name }} ({{ ds.num_samples }} samples, {{ ds.num_features }} features)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="algorithmSelect">Algorithm</label>
+                <select id="algorithmSelect" class="form-control" onchange="updateHyperparamFields()">
+                    {% for algo in algorithms %}
+                    <option value="{{ algo.value }}" data-params="{{ algo.params | tojson }}">
+                        {{ algo.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="hyperparamContainer" class="form-group">
+                <label>Hyperparameters</label>
+                <div id="hyperparamFields"></div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="testRatio">Test Ratio</label>
+                    <input type="number" id="testRatio" class="form-control"
+                           value="0.2" min="0.05" max="0.5" step="0.05" />
+                </div>
+                <div class="form-group half">
+                    <label for="randomState">Random Seed</label>
+                    <input type="number" id="randomState" class="form-control"
+                           value="42" min="0" max="9999" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="trainBtn">
+                Train Model
+            </button>
+        </form>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="results-panel card" id="resultsPanel" style="display: none;">
+        <h2>Training Results</h2>
+
+        <div class="metrics-grid" id="metricsGrid">
+            <div class="metric-card">
+                <div class="metric-label">Accuracy</div>
+                <div class="metric-value" id="metricAccuracy">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Precision</div>
+                <div class="metric-value" id="metricPrecision">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Recall</div>
+                <div class="metric-value" id="metricRecall">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">F1 Score</div>
+                <div class="metric-value" id="metricF1">--</div>
+            </div>
+        </div>
+
+        <div class="result-meta" id="resultMeta"></div>
+
+        <div class="chart-section">
+            <h3>Feature Importance</h3>
+            <canvas id="importanceChart" width="400" height="250"></canvas>
+        </div>
+
+        <div class="chart-section">
+            <h3>Confusion Matrix</h3>
+            <canvas id="confusionChart" width="400" height="300"></canvas>
+        </div>
+
+        <div class="result-actions">
+            <a id="explainLink" href="#" class="btn btn-secondary">View Full Explanation</a>
+        </div>
+    </div>
+</div>
+
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+    <p>Training model...</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    updateHyperparamFields();
+    document.getElementById('trainForm').addEventListener('submit', handleTrain);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}MLExplain - About{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>About MLExplain</h1>
+    <p class="subtitle">An interactive machine learning model explainer</p>
+</section>
+
+<div class="about-content">
+    <div class="card">
+        <h2>What is MLExplain?</h2>
+        <p>
+            MLExplain is an educational and practical tool for exploring how different
+            machine learning algorithms perform on classic datasets. It provides an
+            intuitive web interface for training models, inspecting feature importance,
+            studying confusion matrices, and comparing algorithms side by side.
+        </p>
+        <p>
+            Built with Flask and scikit-learn, MLExplain requires no external AI APIs
+            and runs entirely locally. All experiments are stored in a SQLite database
+            for full reproducibility and history tracking.
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Supported Algorithms</h2>
+        <div class="algo-grid">
+            <div class="algo-card">
+                <h3>Decision Tree</h3>
+                <p>Interpretable tree-based classifier that splits data based on feature
+                thresholds. Provides direct feature importance via Gini impurity reduction.</p>
+                <div class="algo-params">
+                    <span class="param-tag">max_depth</span>
+                    <span class="param-tag">min_samples_split</span>
+                </div>
+            </div>
+            <div class="algo-card">
+                <h3>Random Forest</h3>
+                <p>Ensemble of decision trees trained with bagging. Reduces overfitting
+                and provides robust feature importance averaged across all trees.</p>
+                <div class="algo-params">
+                    <span class="param-tag">n_estimators</span>
+                    <span class="param-tag">max_depth</span>
+                </div>
+            </div>
+            <div class="algo-card">
+                <h3>Support Vector Machine</h3>
+                <p>Kernel-based classifier that finds optimal hyperplanes for separating
+                classes. Effective in high-dimensional spaces.</p>
+                <div class="algo-params">
+                    <span class="param-tag">C</span>
+                    <span class="param-tag">kernel</span>
+                </div>
+            </div>
+            <div class="algo-card">
+                <h3>K-Nearest Neighbours</h3>
+                <p>Instance-based learning that classifies samples by majority vote
+                of their k nearest neighbours in feature space.</p>
+                <div class="algo-params">
+                    <span class="param-tag">n_neighbors</span>
+                    <span class="param-tag">metric</span>
+                </div>
+            </div>
+            <div class="algo-card">
+                <h3>Logistic Regression</h3>
+                <p>Linear model for classification using log-odds. Fast to train and
+                provides probabilistic predictions with confidence scores.</p>
+                <div class="algo-params">
+                    <span class="param-tag">C</span>
+                    <span class="param-tag">solver</span>
+                    <span class="param-tag">max_iter</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Built-in Datasets</h2>
+        <div class="dataset-list">
+            <div class="dataset-item">
+                <h3>Iris</h3>
+                <p>150 samples &middot; 4 features &middot; 3 classes (setosa, versicolor, virginica)</p>
+            </div>
+            <div class="dataset-item">
+                <h3>Wine</h3>
+                <p>178 samples &middot; 13 features &middot; 3 cultivar classes</p>
+            </div>
+            <div class="dataset-item">
+                <h3>Breast Cancer</h3>
+                <p>569 samples &middot; 30 features &middot; 2 classes (malignant, benign)</p>
+            </div>
+            <div class="dataset-item">
+                <h3>Digits</h3>
+                <p>1,797 samples &middot; 64 features &middot; 10 classes (0-9)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Explanation Methods</h2>
+        <div class="method-grid">
+            <div class="method-card">
+                <h3>Tree-based Feature Importance</h3>
+                <p>Available for Decision Tree and Random Forest. Uses the total
+                Gini impurity reduction contributed by each feature across all
+                splits in the tree(s).</p>
+            </div>
+            <div class="method-card">
+                <h3>Permutation Importance</h3>
+                <p>Available for all models. Measures the decrease in model accuracy
+                when a single feature's values are randomly shuffled, breaking
+                the relationship between the feature and the target.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Technology Stack</h2>
+        <div class="tech-grid">
+            <div class="tech-item">
+                <strong>Backend:</strong> Python 3.11, Flask 3.0
+            </div>
+            <div class="tech-item">
+                <strong>ML Engine:</strong> scikit-learn 1.3, NumPy 1.26
+            </div>
+            <div class="tech-item">
+                <strong>Database:</strong> SQLite via SQLAlchemy 2.0
+            </div>
+            <div class="tech-item">
+                <strong>Frontend:</strong> Jinja2 templates, Chart.js 4
+            </div>
+            <div class="tech-item">
+                <strong>Testing:</strong> pytest 7.4 with coverage
+            </div>
+            <div class="tech-item">
+                <strong>Deployment:</strong> Docker, Gunicorn
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>REST API</h2>
+        <p>MLExplain provides a full REST API for programmatic access to all features:</p>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Endpoint</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>GET</td><td><code>/api/health</code></td><td>Health check</td></tr>
+                    <tr><td>GET</td><td><code>/api/datasets</code></td><td>List datasets</td></tr>
+                    <tr><td>GET</td><td><code>/api/datasets/&lt;name&gt;</code></td><td>Dataset info</td></tr>
+                    <tr><td>POST</td><td><code>/api/train</code></td><td>Train a model</td></tr>
+                    <tr><td>GET</td><td><code>/api/experiments</code></td><td>List experiments</td></tr>
+                    <tr><td>GET</td><td><code>/api/experiments/&lt;id&gt;</code></td><td>Experiment details</td></tr>
+                    <tr><td>DELETE</td><td><code>/api/experiments/&lt;id&gt;</code></td><td>Delete experiment</td></tr>
+                    <tr><td>GET</td><td><code>/api/experiments/&lt;id&gt;/importance</code></td><td>Feature importance</td></tr>
+                    <tr><td>GET</td><td><code>/api/experiments/&lt;id&gt;/confusion</code></td><td>Confusion matrix</td></tr>
+                    <tr><td>GET</td><td><code>/api/experiments/&lt;id&gt;/metrics</code></td><td>All metrics</td></tr>
+                    <tr><td>POST</td><td><code>/api/predict/&lt;id&gt;</code></td><td>Prediction</td></tr>
+                    <tr><td>POST</td><td><code>/api/compare</code></td><td>Compare models</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

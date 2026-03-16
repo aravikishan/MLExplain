@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}MLExplain - Compare Models{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Compare Models</h1>
+    <p class="subtitle">Train multiple algorithms on the same dataset and compare metrics</p>
+</section>
+
+<div class="compare-layout">
+    <!-- Config Panel -->
+    <div class="config-panel card">
+        <h2>Comparison Setup</h2>
+        <form id="compareForm">
+            <div class="form-group">
+                <label for="compareDataset">Dataset</label>
+                <select id="compareDataset" class="form-control">
+                    {% for ds in datasets %}
+                    <option value="{{ ds.name }}">{{ ds.name }} ({{ ds.num_samples }} samples)</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Algorithms</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="algorithms" value="decision_tree" checked> Decision Tree
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="algorithms" value="random_forest" checked> Random Forest
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="algorithms" value="svm" checked> SVM
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="algorithms" value="knn" checked> KNN
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="algorithms" value="logistic_regression" checked> Logistic Regression
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="compareTestRatio">Test Ratio</label>
+                    <input type="number" id="compareTestRatio" class="form-control"
+                           value="0.2" min="0.05" max="0.5" step="0.05" />
+                </div>
+                <div class="form-group half">
+                    <label for="compareRandomState">Random Seed</label>
+                    <input type="number" id="compareRandomState" class="form-control"
+                           value="42" min="0" max="9999" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="compareBtn">
+                Run Comparison
+            </button>
+        </form>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="results-panel card" id="compareResults" style="display: none;">
+        <h2>Comparison Results</h2>
+        <div id="compareTable"></div>
+        <div class="chart-section">
+            <h3>Metrics Comparison</h3>
+            <canvas id="compareChart" width="600" height="350"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Existing Experiments Comparison -->
+<div class="section">
+    <h2>Previous Experiments</h2>
+    {% if experiments %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Algorithm</th>
+                    <th>Dataset</th>
+                    <th>Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1</th>
+                    <th>Time (ms)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in experiments %}
+                <tr>
+                    <td>{{ exp.id }}</td>
+                    <td><a href="/explain/{{ exp.id }}">{{ exp.name }}</a></td>
+                    <td><span class="badge badge-algo">{{ exp.algorithm }}</span></td>
+                    <td>{{ exp.dataset.name if exp.dataset else 'N/A' }}</td>
+                    <td>{% if exp.result %}{{ "%.2f"|format(exp.result.accuracy * 100) }}%{% else %}--{% endif %}</td>
+                    <td>{% if exp.result %}{{ "%.4f"|format(exp.result.precision) }}{% else %}--{% endif %}</td>
+                    <td>{% if exp.result %}{{ "%.4f"|format(exp.result.recall) }}{% else %}--{% endif %}</td>
+                    <td>{% if exp.result %}{{ "%.4f"|format(exp.result.f1_score) }}{% else %}--{% endif %}</td>
+                    <td>{% if exp.result %}{{ "%.1f"|format(exp.result.training_time_ms) }}{% else %}--{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No experiments yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+    <p>Running comparison...</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('compareForm').addEventListener('submit', handleCompare);
+});
+</script>
+{% endblock %}
