@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  mlexplain:
+    build: .
+    container_name: mlexplain
+    ports:
+      - "8006:8006"
+    environment:
+      - PORT=8006
+      - FLASK_DEBUG=0
+    volumes:
+      - mlexplain-data:/app/instance
+    restart: unless-stopped
+
+volumes:
+  mlexplain-data:
